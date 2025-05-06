@@ -12,40 +12,30 @@ struct ContentView: View {
     @State private var text = ""
     
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            TextView(text: $text)
-                .frame(minWidth: 500, minHeight: 400)
-            
-            // Live evaluation overlay
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(evaluatedLines(from: text), id: \.self) { result in
-                    if let result = result {
-                        Text(result)
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
-                    } else {
-                        Text("") // maintain spacing
-                    }
-                }
-            }
-            .padding(8)
-            .allowsHitTesting(false)
-        }
-        .padding()
+        TextView(text: $text, onEqualsPressed: handleEqualsPressed)
+            .frame(minWidth: 500, minHeight: 400)
     }
     
-    func evaluatedLines(from input: String) -> [String?] {
-        let lines = input.components(separatedBy: .newlines)
-        let calculator = Calculator(customization: {
-            var c = EngineCustomization.standard
-            c.featureFlags.variableDeclarations = true
-            return c
-        }())
+    private func handleEqualsPressed() {
+        // Find the current line the cursor is on
+        let lines = text.components(separatedBy: .newlines)
+        guard let lastLine = lines.last else { return }
         
-        return lines.map { line in
-            guard line.contains("==") else { return nil }
-            let result = calculator.calculate(line)
-            return result.isEmptyResult ? nil : "→ \(result.stringValue)"
+        // Check if the line contains "==" and needs evaluation
+        if lastLine.contains("==") {
+            let calculator = Calculator(customization: {
+                var c = EngineCustomization.standard
+                c.featureFlags.variableDeclarations = true
+                return c
+            }())
+            
+            let result = calculator.calculate(lastLine)
+            if !result.isEmptyResult {
+                // Append the result after "=="
+                text += " → \(result.stringValue)"
+                
+                // The cursor position will be updated in the Coordinator
+            }
         }
     }
 }
