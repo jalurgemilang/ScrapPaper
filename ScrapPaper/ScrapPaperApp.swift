@@ -9,9 +9,9 @@ import SwiftUI
 
 @main
 struct ScrapPaperApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+        Settings {} // No app windows at launch
     }
 }
