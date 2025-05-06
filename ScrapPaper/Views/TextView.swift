@@ -1,29 +1,29 @@
-//
-//  TextView.swift
-//  ScrapPaper
-//
-//  Created by Long Fong Yee on 06/05/2025.
-//
-
-
 import SwiftUI
 import AppKit
 
 struct TextView: NSViewRepresentable {
     @Binding var text: String
+    var textStorage: NSTextStorage
     var onEvaluateExpression: () -> Void
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, onEvaluateExpression: onEvaluateExpression)
+        Coordinator(text: $text, textStorage: textStorage, onEvaluateExpression: onEvaluateExpression)
     }
     
     func makeNSView(context: Context) -> NSScrollView {
-        // Create NSTextView inside NSScrollView
-        let textView = NSTextView(frame: .zero)
+        // Create text container and layout manager for attributed text
+        let textContainer = NSTextContainer()
+        let layoutManager = NSLayoutManager()
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
+        
+        // Create NSTextView inside NSScrollView with our text system
+        let textView = NSTextView(frame: .zero, textContainer: textContainer)
         textView.isEditable = true
         textView.isSelectable = true
-        textView.isRichText = false
-        textView.font = .systemFont(ofSize: 14)
+        textView.isRichText = true  // Enable rich text to support colors
+        textView.allowsUndo = true
+        textView.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)  // Use system default size
         textView.delegate = context.coordinator
         textView.backgroundColor = .textBackgroundColor
         textView.autoresizingMask = [.width]
@@ -61,14 +61,26 @@ struct TextView: NSViewRepresentable {
         guard let textView = nsView.documentView as? NSTextView else { return }
         if textView.string != text {
             let selectedRange = textView.selectedRange()
-            textView.string = text
             
-            // If this update was triggered by our equals evaluation, move cursor to end
-            if context.coordinator.shouldMoveCursorToEnd {
-                textView.setSelectedRange(NSRange(location: text.count, length: 0))
-                context.coordinator.shouldMoveCursorToEnd = false
-            } else if selectedRange.location <= text.count {
-                textView.setSelectedRange(selectedRange)
+            // Only update if the text actually changed to avoid losing formatting
+            if textView.string != text {
+                // Preserve attributed text where possible
+                if context.coordinator.isUpdatingFromTextView == false && !context.coordinator.isAddingAttributedResult {
+                    // Only replace content if we're not in the middle of adding a result
+                    textStorage.beginEditing()
+                    textStorage.replaceCharacters(in: NSRange(location: 0, length: textStorage.length), with: text)
+                    textStorage.endEditing()
+                }
+                
+                // If this update was triggered by our equals evaluation, move cursor to end
+                if context.coordinator.shouldMoveCursorToEnd {
+                    textView.setSelectedRange(NSRange(location: text.count, length: 0))
+                    context.coordinator.shouldMoveCursorToEnd = false
+                } else if selectedRange.location <= text.count {
+                    textView.setSelectedRange(selectedRange)
+                }
+                
+                context.coordinator.isAddingAttributedResult = false
             }
         }
     }
@@ -81,19 +93,27 @@ struct TextView: NSViewRepresentable {
     
     class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
+        var textStorage: NSTextStorage
         let onEvaluateExpression: () -> Void
         weak var textView: NSTextView?
         var eventMonitor: Any?
         var shouldMoveCursorToEnd = false
+        var isUpdatingFromTextView = false
+        var isAddingAttributedResult = false
         
-        init(text: Binding<String>, onEvaluateExpression: @escaping () -> Void) {
+        init(text: Binding<String>, textStorage: NSTextStorage, onEvaluateExpression: @escaping () -> Void) {
             _text = text
+            self.textStorage = textStorage
             self.onEvaluateExpression = onEvaluateExpression
         }
         
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
+            
+            // Set flag to prevent circular updates
+            isUpdatingFromTextView = true
             text = textView.string
+            isUpdatingFromTextView = false
             
             // Check if the user just typed "=="
             if let selectedRange = textView.selectedRanges.first as? NSRange,

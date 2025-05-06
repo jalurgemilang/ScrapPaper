@@ -1,24 +1,18 @@
-//
-//  ContentView.swift
-//  ScrapPaper
-//
-//  Created by Long Fong Yee on 06/05/2025.
-//
-
 import SwiftUI
 import SoulverCore
 
 struct ContentView: View {
     @State private var text = ""
+    @State private var textStorage = NSTextStorage()
     
     var body: some View {
-        
-        TextView(text: $text, onEvaluateExpression: evaluateExpression)
+        TextView(text: $text,
+                textStorage: textStorage,
+                onEvaluateExpression: useSoulverCore)
             .frame(minWidth: 300, minHeight: 300)
-       
     }
     
-    private func evaluateExpression() {
+    private func useSoulverCore() {
         // Find the current line the cursor is on
         let lines = text.components(separatedBy: .newlines)
         guard let lastLine = lines.last else { return }
@@ -33,16 +27,33 @@ struct ContentView: View {
             
             let result = calculator.calculate(lastLine)
             if !result.isEmptyResult {
-                // Append the result after "=="
-                text += " → \(result.stringValue)"
+                // Get the result text
+                let resultText = " → \(result.stringValue)"
                 
-                // The cursor position will be updated in the Coordinator
+                // Create attributed string with blue color
+                let attributedResult = NSAttributedString(
+                    string: resultText,
+                    attributes: [.foregroundColor: NSColor.systemBlue]
+                )
+                
+                // Tell the coordinator we're adding an attributed result
+                if let coordinator = textStorage.layoutManagers.first?.textContainers.first?.textView?.delegate as? TextView.Coordinator {
+                    coordinator.isAddingAttributedResult = true
+                }
+                
+                // Add to the text storage directly
+                textStorage.beginEditing()
+                textStorage.append(attributedResult)
+                textStorage.endEditing()
+                
+                // Update the bound text property
+                text = textStorage.string
+                
+                // Set flag to move cursor to end
+                if let coordinator = textStorage.layoutManagers.first?.textContainers.first?.textView?.delegate as? TextView.Coordinator {
+                    coordinator.shouldMoveCursorToEnd = true
+                }
             }
         }
     }
-}
-
-
-#Preview {
-    ContentView()
 }

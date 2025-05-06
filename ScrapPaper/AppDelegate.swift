@@ -23,7 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Create menu bar icon
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: "Text Editor")
+            button.image = NSImage(systemSymbolName: "paperclip", accessibilityDescription: "Text Editor")
             button.action = #selector(toggleFromMenu)
             button.target = self
         }
