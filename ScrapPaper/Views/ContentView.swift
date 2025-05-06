@@ -12,11 +12,13 @@ struct ContentView: View {
     @State private var text = ""
     
     var body: some View {
-        TextView(text: $text, onEqualsPressed: handleEqualsPressed)
-            .frame(minWidth: 500, minHeight: 400)
+        
+        TextView(text: $text, onEvaluateExpression: evaluateExpression)
+            .frame(minWidth: 300, minHeight: 300)
+       
     }
     
-    private func handleEqualsPressed() {
+    private func evaluateExpression() {
         // Find the current line the cursor is on
         let lines = text.components(separatedBy: .newlines)
         guard let lastLine = lines.last else { return }
@@ -39,6 +41,7 @@ struct ContentView: View {
         }
     }
 }
+
 
 #Preview {
     ContentView()

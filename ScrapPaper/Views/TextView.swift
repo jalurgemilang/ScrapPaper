@@ -11,10 +11,10 @@ import AppKit
 
 struct TextView: NSViewRepresentable {
     @Binding var text: String
-    var onEqualsPressed: () -> Void
+    var onEvaluateExpression: () -> Void
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, onEqualsPressed: onEqualsPressed)
+        Coordinator(text: $text, onEvaluateExpression: onEvaluateExpression)
     }
     
     func makeNSView(context: Context) -> NSScrollView {
@@ -31,7 +31,7 @@ struct TextView: NSViewRepresentable {
         // Monitor key events
         let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.keyCode == 36 && event.modifierFlags.contains(.shift) { // Enter with Shift (==)
-                context.coordinator.handleEqualsPressed()
+                context.coordinator.processEqualsPressed()
                 return nil
             }
             return event
@@ -81,14 +81,14 @@ struct TextView: NSViewRepresentable {
     
     class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
-        let onEqualsPressed: () -> Void
+        let onEvaluateExpression: () -> Void
         weak var textView: NSTextView?
         var eventMonitor: Any?
         var shouldMoveCursorToEnd = false
         
-        init(text: Binding<String>, onEqualsPressed: @escaping () -> Void) {
+        init(text: Binding<String>, onEvaluateExpression: @escaping () -> Void) {
             _text = text
-            self.onEqualsPressed = onEqualsPressed
+            self.onEvaluateExpression = onEvaluateExpression
         }
         
         func textDidChange(_ notification: Notification) {
@@ -105,14 +105,14 @@ struct TextView: NSViewRepresentable {
                 let lastTwoChars = String(textView.string[startIndex..<endIndex])
                 
                 if lastTwoChars == "==" {
-                    handleEqualsPressed()
+                    processEqualsPressed()
                 }
             }
         }
         
-        func handleEqualsPressed() {
+        func processEqualsPressed() {
             let originalLength = text.count
-            onEqualsPressed()
+            onEvaluateExpression()
             
             // If text length changed, we inserted a result and should move cursor to end
             if text.count > originalLength {
