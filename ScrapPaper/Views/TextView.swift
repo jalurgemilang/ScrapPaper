@@ -3,6 +3,7 @@ import AppKit
 
 struct TextView: NSViewRepresentable {
     @Binding var text: String
+    var fontName: String
     var textStorage: NSTextStorage
     var onEvaluateExpression: () -> Void
     var fontSize: CGFloat = NSFont.systemFontSize       // Add font size parameter with default value
@@ -25,7 +26,7 @@ struct TextView: NSViewRepresentable {
         textView.isSelectable = true
         textView.isRichText = true  // Enable rich text to support colors
         textView.allowsUndo = true
-        textView.font = NSFont.systemFont(ofSize: fontSize)  // Use the provided font size
+        textView.font = NSFont(name: fontName, size: 14) ?? .systemFont(ofSize: 14)
         textView.delegate = context.coordinator
         textView.backgroundColor = .textBackgroundColor
         textView.autoresizingMask = [.width]
@@ -63,6 +64,12 @@ struct TextView: NSViewRepresentable {
     
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         guard let textView = nsView.documentView as? NSTextView else { return }
+        
+        // Update font type
+        if let textView = nsView.documentView as? NSTextView {
+            textView.string = text
+            textView.font = NSFont(name: fontName, size: 14) ?? .systemFont(ofSize: 14)
+        }
         
         // Update font size if it has changed
         if textView.font?.pointSize != fontSize {

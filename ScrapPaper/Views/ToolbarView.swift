@@ -14,6 +14,9 @@ struct ToolbarView: View {
     let clearText: () -> Void
     let shareText: () -> Void
     
+    @AppStorage("selectedFontName") private var selectedFontName = NSFont.systemFont(ofSize: 14).fontName
+    let availableFonts = NSFontManager.shared.availableFontFamilies.sorted()
+    
     var body: some View {
         HStack {
             Button(action: decreaseFontSize) {
@@ -23,6 +26,14 @@ struct ToolbarView: View {
             Button(action: increaseFontSize) {
                 Image(systemName: "textformat.size.larger")
             }
+            
+            Picker("", selection: $selectedFontName) {
+                ForEach(availableFonts, id: \.self) { font in
+                    Text(font).font(.custom(font, size: 12)).tag(font)
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+            .frame(width: 160)
             
             Button(action: clearText) {
                 Image(systemName: "eraser.line.dashed")

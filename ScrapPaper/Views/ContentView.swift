@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var text = ""
     @State private var textStorage = NSTextStorage()
     @AppStorage("fontSize") private var fontSize: Double = 14.0
+    @AppStorage("selectedFontName") var selectedFontName: String = NSFont.systemFont(ofSize: 14).fontName
     
     var body: some View {
         ZStack{
@@ -20,6 +21,7 @@ struct ContentView: View {
                 )
                 .padding(.horizontal)                
                 TextView(text: $text,
+                         fontName: selectedFontName,
                          textStorage: textStorage,
                          onEvaluateExpression: useSoulverCore,
                          fontSize: CGFloat(fontSize),
