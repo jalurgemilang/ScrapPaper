@@ -5,6 +5,7 @@ struct TextView: NSViewRepresentable {
     @Binding var text: String
     var textStorage: NSTextStorage
     var onEvaluateExpression: () -> Void
+    var fontSize: CGFloat = NSFont.systemFontSize  // Add font size parameter with default value
     
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text, textStorage: textStorage, onEvaluateExpression: onEvaluateExpression)
@@ -23,7 +24,7 @@ struct TextView: NSViewRepresentable {
         textView.isSelectable = true
         textView.isRichText = true  // Enable rich text to support colors
         textView.allowsUndo = true
-        textView.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)  // Use system default size
+        textView.font = NSFont.systemFont(ofSize: fontSize)  // Use the provided font size
         textView.delegate = context.coordinator
         textView.backgroundColor = .textBackgroundColor
         textView.autoresizingMask = [.width]
@@ -59,6 +60,12 @@ struct TextView: NSViewRepresentable {
     
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         guard let textView = nsView.documentView as? NSTextView else { return }
+        
+        // Update font size if it has changed
+        if textView.font?.pointSize != fontSize {
+            textView.font = NSFont.systemFont(ofSize: fontSize)
+        }
+        
         if textView.string != text {
             let selectedRange = textView.selectedRange()
             
