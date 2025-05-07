@@ -10,12 +10,17 @@ import Cocoa
 import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+//    •    Create the initial app window
+//    •    Set up menus, preferences, or status items
+//    •    Handle app reopen events (e.g., clicking the dock icon)
+    
     var window: NSWindow?
     var statusItem: NSStatusItem?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         HotKeyManager.shared.registerHotKey()
 
+        // Observe Control-Space key stroke
         NotificationCenter.default.addObserver(forName: .triggerShowWindow, object: nil, queue: .main) { _ in
             self.toggleWindow()
         }
@@ -27,6 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(toggleFromMenu)
             button.target = self
         }
+        
     }
     
     // Menu bar icon

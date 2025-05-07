@@ -11,6 +11,7 @@ import SwiftUI
 struct ToolbarView: View {
     let increaseFontSize: () -> Void
     let decreaseFontSize: () -> Void
+    let clearText: () -> Void
     let shareText: () -> Void
     
     var body: some View {
@@ -23,12 +24,20 @@ struct ToolbarView: View {
                 Image(systemName: "textformat.size.larger")
             }
             
-            Spacer()
-            
-            Button(action: shareText) {
-                Image(systemName: "square.and.arrow.up")
-                    .help("Share and Clear Text")
+            Button(action: clearText) {
+                Image(systemName: "eraser.line.dashed")
+                    .help("Clear Text")
             }
+            
+            Spacer()
+
+            
+                
+                Button(action: shareText) {
+                    Image(systemName: "square.and.arrow.up")
+                        .help("Share")
+                }
+                
         }
     }
 }

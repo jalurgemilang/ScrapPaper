@@ -5,7 +5,8 @@ struct TextView: NSViewRepresentable {
     @Binding var text: String
     var textStorage: NSTextStorage
     var onEvaluateExpression: () -> Void
-    var fontSize: CGFloat = NSFont.systemFontSize  // Add font size parameter with default value
+    var fontSize: CGFloat = NSFont.systemFontSize       // Add font size parameter with default value
+    var margins: NSSize = NSSize(width: 10, height: 10) // Add margin
     
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text, textStorage: textStorage, onEvaluateExpression: onEvaluateExpression)
@@ -28,6 +29,8 @@ struct TextView: NSViewRepresentable {
         textView.delegate = context.coordinator
         textView.backgroundColor = .textBackgroundColor
         textView.autoresizingMask = [.width]
+        // Apply text margins
+        textView.textContainerInset = margins
         
         // Monitor key events
         let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -64,6 +67,11 @@ struct TextView: NSViewRepresentable {
         // Update font size if it has changed
         if textView.font?.pointSize != fontSize {
             textView.font = NSFont.systemFont(ofSize: fontSize)
+        }
+        
+        // Update margins if they have changed
+        if textView.textContainerInset != margins {
+            textView.textContainerInset = margins
         }
         
         if textView.string != text {

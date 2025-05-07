@@ -35,8 +35,8 @@ class SharingManager {
             
             // Get the view coordinates for the Share button (approximated from the top-right)
             let shareButtonFrame = NSRect(x: contentView.bounds.width - 50,
-                                         y: contentView.bounds.height - 50,
-                                         width: 20, height: 20)
+                                          y: contentView.bounds.height - 50,
+                                          width: 20, height: 20)
             
             sharingService.show(relativeTo: shareButtonFrame, of: contentView, preferredEdge: .minY)
         }
@@ -90,3 +90,4 @@ extension SharingServiceDelegate: NSSharingServiceDelegate {
         // clearTextAction.perform()
     }
 }
+

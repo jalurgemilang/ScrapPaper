@@ -8,20 +8,27 @@ struct ContentView: View {
     @AppStorage("fontSize") private var fontSize: Double = 14.0
     
     var body: some View {
-        VStack {
-            ToolbarView(
-                increaseFontSize: increaseFontSize,
-                decreaseFontSize: decreaseFontSize,
-                shareText: shareText
-            )
-            .padding(.horizontal)
-            
-            TextView(text: $text,
-                    textStorage: textStorage,
-                    onEvaluateExpression: useSoulverCore,
-                    fontSize: CGFloat(fontSize))
-                .frame(minWidth: 300, minHeight: 300)
+        ZStack{
+            Color.white //set the background white
+            VStack {
+                Text("9").font(.system(size: 6)).hidden()
+                ToolbarView(
+                    increaseFontSize: increaseFontSize,
+                    decreaseFontSize: decreaseFontSize,
+                    clearText: clearText,
+                    shareText: shareText
+                )
+                .padding(.horizontal)                
+                TextView(text: $text,
+                         textStorage: textStorage,
+                         onEvaluateExpression: useSoulverCore,
+                         fontSize: CGFloat(fontSize),
+                         margins: NSSize(width: 14, height: 14))
+                    .frame(minWidth: 300, minHeight: 300)
+                Text("9").font(.system(size: 6)).hidden()
+            } //VStack
         }
+        
     }
     
     private func increaseFontSize() {
@@ -56,5 +63,11 @@ struct ContentView: View {
         ) { newText in
             self.text = newText
         }
+    }
+}
+
+struct ContentView_Previews : PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
