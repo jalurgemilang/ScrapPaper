@@ -22,7 +22,7 @@ struct TextView: NSViewRepresentable {
         
         // Create NSTextView inside NSScrollView with our text system
         let textView = NSTextView(frame: .zero, textContainer: textContainer)
-        textView.translatesAutoresizingMaskIntoConstraints = false
+        //textView.translatesAutoresizingMaskIntoConstraints = false //remove this to mouse click, drag & highlight
         textView.isEditable = true
         textView.isSelectable = true
         textView.isRichText = true
@@ -31,8 +31,8 @@ struct TextView: NSViewRepresentable {
         textView.backgroundColor = .textBackgroundColor
         textView.drawsBackground = false            //set false if using image as background
         textView.isVerticallyResizable = true       //true  = this enable wordwrap?
-        textView.isHorizontallyResizable = false    //false = this enable wordwrap?
-        textView.autoresizingMask = [.width]
+        textView.isHorizontallyResizable = false    //false = this enable wordwrap; also needed for mouse click, drag & highlight
+        textView.autoresizingMask = [.width]        //needed for mouse click, drag & highlight
         
         textView.delegate = context.coordinator
         
@@ -73,39 +73,39 @@ struct TextView: NSViewRepresentable {
             textView.window?.makeFirstResponder(textView)
         }
         
-//        // Set up the background image
-//        let imageView = NSImageView()
-//        imageView.imageScaling = .scaleAxesIndependently
-//        imageView.translatesAutoresizingMaskIntoConstraints = false
-//        
-//        // Assign initial image based on system appearance
-//        let appearance = NSApp.effectiveAppearance
-//        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-//            imageView.image = NSImage(named: "black_napkin")
-//        } else {
-//            imageView.image = NSImage(named: "white_napkin")
-//        }
-//        
-//        // Use a container view to hold background + text
-//        let containerView = NSView()
-//        containerView.translatesAutoresizingMaskIntoConstraints = false
-//        containerView.addSubview(imageView)
-//        containerView.addSubview(textView)
-//        
-//        // Constraints to fill the view
-//        NSLayoutConstraint.activate([
-//            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-//            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-//            imageView.topAnchor.constraint(equalTo: containerView.topAnchor),
-//            imageView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-//            
-//            textView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-//            textView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-//            textView.topAnchor.constraint(equalTo: containerView.topAnchor),
-//            textView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-//        ])
-//        
-//        scrollView.documentView = containerView
+        //        // Set up the background image
+        //        let imageView = NSImageView()
+        //        imageView.imageScaling = .scaleAxesIndependently
+        //        imageView.translatesAutoresizingMaskIntoConstraints = false
+        //
+        //        // Assign initial image based on system appearance
+        //        let appearance = NSApp.effectiveAppearance
+        //        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+        //            imageView.image = NSImage(named: "black_napkin")
+        //        } else {
+        //            imageView.image = NSImage(named: "white_napkin")
+        //        }
+        //
+        //        // Use a container view to hold background + text
+        //        let containerView = NSView()
+        //        containerView.translatesAutoresizingMaskIntoConstraints = false
+        //        containerView.addSubview(imageView)
+        //        containerView.addSubview(textView)
+        //
+        //        // Constraints to fill the view
+        //        NSLayoutConstraint.activate([
+        //            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        //            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        //            imageView.topAnchor.constraint(equalTo: containerView.topAnchor),
+        //            imageView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        //
+        //            textView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        //            textView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        //            textView.topAnchor.constraint(equalTo: containerView.topAnchor),
+        //            textView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        //        ])
+        //
+        //        scrollView.documentView = containerView
         
         // FINALE:
         scrollView.documentView = textView
