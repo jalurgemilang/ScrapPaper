@@ -3,7 +3,7 @@ import SoulverCore
 import AppKit
 
 struct ContentView: View {
-    @State private var text = ""
+    @AppStorage("scrapText") private var text: String = ""
     @State private var textStorage = NSTextStorage()
     
     @AppStorage("fontSize") private var fontSize: Double = 14.0

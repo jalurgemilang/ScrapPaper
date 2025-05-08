@@ -127,24 +127,64 @@ struct TextView: NSViewRepresentable {
             .font: font,
             .foregroundColor: NSColor.labelColor
         ]
-        let attributed = NSAttributedString(string: text, attributes: attributes)
-        textView.textStorage?.setAttributedString(attributed)
+        //overwrites the entire textStorage with new NSAttributedString
+        //that's why didn't preserve color when increase/decrease font size
+        //let attributed = NSAttributedString(string: text, attributes: attributes)
+        //textView.textStorage?.setAttributedString(attributed)
+        
+        
+        // Update typing attributes (used for new text the user types)
+        textView.typingAttributes[.font] = font
+        textView.typingAttributes[.foregroundColor] = NSColor.labelColor
+        
+        // Update font on the existing attributed text without touching colors
+        if let storage = textView.textStorage {
+            storage.beginEditing()
+            
+            storage.enumerateAttributes(in: NSRange(location: 0, length: storage.length)) { attrs, range, _ in
+                // Only update the font if it exists (to avoid affecting SoulverCore's attributed results)
+                if let _ = attrs[.font] {
+                    var updated = attrs
+                    updated[.font] = font
+                    storage.setAttributes(updated, range: range)
+                }
+            }
+            
+            storage.endEditing()
+        }
+        
+        // Update inset if needed
+        if textView.textContainerInset != margins {
+            textView.textContainerInset = margins
+        }
+        
+        // Update plain text only if needed (e.g. external edit)
+        if textView.string != text {
+            context.coordinator.isUpdatingFromTextView = true
+            textView.string = text
+            context.coordinator.isUpdatingFromTextView = false
+        }
         
         // Always apply new font, margins and Light/Dark mode
-        textView.typingAttributes = [
-            .font: font,
-            .foregroundColor: NSColor.labelColor
-        ]
-        textView.font = font // Ensure UI reflects new font even without new text
+//        textView.typingAttributes = [
+//            .font: font,
+//            .foregroundColor: NSColor.labelColor
+//        ]
+//        textView.font = font // Ensure UI reflects new font even without new text
 
         if textView.textContainerInset != margins {
             textView.textContainerInset = margins
         }
 
         // Only replace text if it changed (preserves cursor, user edits)
+//        if textView.string != text {
+//            let attributed = NSAttributedString(string: text, attributes: [.font: font])
+//            textView.textStorage?.setAttributedString(attributed)
+//        }
         if textView.string != text {
-            let attributed = NSAttributedString(string: text, attributes: [.font: font])
-            textView.textStorage?.setAttributedString(attributed)
+            context.coordinator.isUpdatingFromTextView = true
+            textView.string = text
+            context.coordinator.isUpdatingFromTextView = false
         }
     }
     
