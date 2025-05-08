@@ -24,12 +24,16 @@ struct TextView: NSViewRepresentable {
         let textView = NSTextView(frame: .zero, textContainer: textContainer)
         textView.isEditable = true
         textView.isSelectable = true
-        textView.isRichText = true  // Enable rich text to support colors
+        textView.isRichText = true
         textView.allowsUndo = true
-        textView.font = NSFont(name: fontName, size: 14) ?? .systemFont(ofSize: 14)
-        textView.delegate = context.coordinator
+        textView.font = NSFont(name: fontName, size: fontSize) ?? .systemFont(ofSize: fontSize)
         textView.backgroundColor = .textBackgroundColor
+        textView.isVerticallyResizable = true       //this enable wordwrap?
+        textView.isHorizontallyResizable = false    //this enable wordwrap?
         textView.autoresizingMask = [.width]
+        
+        textView.delegate = context.coordinator
+        
         // Apply text margins
         textView.textContainerInset = margins
         
@@ -48,9 +52,16 @@ struct TextView: NSViewRepresentable {
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
-        scrollView.borderType = .bezelBorder
+        scrollView.autohidesScrollers = true
+        scrollView.borderType = .noBorder
         scrollView.autoresizingMask = [.width, .height]
         scrollView.contentView.postsBoundsChangedNotifications = true
+        
+        // Configures how NSTextView handles word wrap and resizing
+        if let container = textView.textContainer {
+            container.widthTracksTextView = true
+            container.lineBreakMode = .byWordWrapping
+        }
         
         context.coordinator.textView = textView
         
@@ -65,45 +76,33 @@ struct TextView: NSViewRepresentable {
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         guard let textView = nsView.documentView as? NSTextView else { return }
         
-        // Update font type
-        if let textView = nsView.documentView as? NSTextView {
-            textView.string = text
-            textView.font = NSFont(name: fontName, size: 14) ?? .systemFont(ofSize: 14)
+        // Prevent updates if the user is actively editing
+        if context.coordinator.isUpdatingFromTextView {
+            return
         }
         
-        // Update font size if it has changed
-        if textView.font?.pointSize != fontSize {
-            textView.font = NSFont.systemFont(ofSize: fontSize)
-        }
-        
-        // Update margins if they have changed
-        if textView.textContainerInset != margins {
-            textView.textContainerInset = margins
-        }
-        
+        // Only update if the text value changes.
+        // If you’re only changing the font name or size, but the text value itself stays the same, this condition is false and the font never updates
         if textView.string != text {
-            let selectedRange = textView.selectedRange()
+            let font = NSFont(name: fontName, size: fontSize) ?? .systemFont(ofSize: fontSize)
             
-            // Only update if the text actually changed to avoid losing formatting
-            if textView.string != text {
-                // Preserve attributed text where possible
-                if context.coordinator.isUpdatingFromTextView == false && !context.coordinator.isAddingAttributedResult {
-                    // Only replace content if we're not in the middle of adding a result
-                    textStorage.beginEditing()
-                    textStorage.replaceCharacters(in: NSRange(location: 0, length: textStorage.length), with: text)
-                    textStorage.endEditing()
-                }
-                
-                // If this update was triggered by our equals evaluation, move cursor to end
-                if context.coordinator.shouldMoveCursorToEnd {
-                    textView.setSelectedRange(NSRange(location: text.count, length: 0))
-                    context.coordinator.shouldMoveCursorToEnd = false
-                } else if selectedRange.location <= text.count {
-                    textView.setSelectedRange(selectedRange)
-                }
-                
-                context.coordinator.isAddingAttributedResult = false
+            // Create attributed string with font
+            let attributed = NSAttributedString(
+                string: text,
+                attributes: [.font: font]
+            )
+            
+            // Update the whole text storage
+            textView.textStorage?.setAttributedString(attributed)
+            
+            // Set the typing attributes (for newly typed text)
+            textView.typingAttributes = [.font: font]
+            
+            // Update margins
+            if textView.textContainerInset != margins {
+                textView.textContainerInset = margins
             }
+
         }
     }
     
@@ -135,7 +134,11 @@ struct TextView: NSViewRepresentable {
             // Set flag to prevent circular updates
             isUpdatingFromTextView = true
             text = textView.string
-            isUpdatingFromTextView = false
+            
+            // Delay the reset of the flag to ensure any SwiftUI updates complete
+            DispatchQueue.main.async {
+                self.isUpdatingFromTextView = false
+            }
             
             // Check if the user just typed "=="
             if let selectedRange = textView.selectedRanges.first as? NSRange,
