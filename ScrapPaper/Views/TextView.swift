@@ -22,12 +22,14 @@ struct TextView: NSViewRepresentable {
         
         // Create NSTextView inside NSScrollView with our text system
         let textView = NSTextView(frame: .zero, textContainer: textContainer)
+        textView.translatesAutoresizingMaskIntoConstraints = false
         textView.isEditable = true
         textView.isSelectable = true
         textView.isRichText = true
         textView.allowsUndo = true
         textView.font = NSFont(name: fontName, size: fontSize) ?? .systemFont(ofSize: fontSize)
         textView.backgroundColor = .textBackgroundColor
+        textView.drawsBackground = false            //set false if using image as background
         textView.isVerticallyResizable = true       //this enable wordwrap?
         textView.isHorizontallyResizable = false    //this enable wordwrap?
         textView.autoresizingMask = [.width]
@@ -49,13 +51,15 @@ struct TextView: NSViewRepresentable {
         
         // Wrap in scroll view
         let scrollView = NSScrollView()
-        scrollView.documentView = textView
+        scrollView.backgroundColor = .windowBackgroundColor
+        scrollView.drawsBackground = false          //set false if using image as background
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
         scrollView.borderType = .noBorder
         scrollView.autoresizingMask = [.width, .height]
         scrollView.contentView.postsBoundsChangedNotifications = true
+        //scrollView.documentView = textView
         
         // Configures how NSTextView handles word wrap and resizing
         if let container = textView.textContainer {
@@ -70,6 +74,39 @@ struct TextView: NSViewRepresentable {
             textView.window?.makeFirstResponder(textView)
         }
         
+        // Set up the background image
+            let imageView = NSImageView()
+            imageView.imageScaling = .scaleAxesIndependently
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+
+        // Assign initial image based on system appearance
+        let appearance = NSApp.effectiveAppearance
+        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            imageView.image = NSImage(named: "black_napkin")
+        } else {
+            imageView.image = NSImage(named: "white_napkin")
+        }
+        
+        // Use a container view to hold background + text
+            let containerView = NSView()
+            containerView.translatesAutoresizingMaskIntoConstraints = false
+            containerView.addSubview(imageView)
+            containerView.addSubview(textView)
+
+        // Constraints to fill the view
+            NSLayoutConstraint.activate([
+                imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+                imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+                imageView.topAnchor.constraint(equalTo: containerView.topAnchor),
+                imageView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+
+                textView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+                textView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+                textView.topAnchor.constraint(equalTo: containerView.topAnchor),
+                textView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            ])
+
+        scrollView.documentView = containerView
         return scrollView
     }
     
@@ -81,28 +118,31 @@ struct TextView: NSViewRepresentable {
             return
         }
         
-        // Only update if the text value changes.
-        // If you’re only changing the font name or size, but the text value itself stays the same, this condition is false and the font never updates
-        if textView.string != text {
-            let font = NSFont(name: fontName, size: fontSize) ?? .systemFont(ofSize: fontSize)
-            
-            // Create attributed string with font
-            let attributed = NSAttributedString(
-                string: text,
-                attributes: [.font: font]
-            )
-            
-            // Update the whole text storage
-            textView.textStorage?.setAttributedString(attributed)
-            
-            // Set the typing attributes (for newly typed text)
-            textView.typingAttributes = [.font: font]
-            
-            // Update margins
-            if textView.textContainerInset != margins {
-                textView.textContainerInset = margins
-            }
+        // I am using attributed strings so, I have to set the color to the attributed string
+        // to adapt to Light or Dark Appearance. It will not work if I set it in makeNSView
+        let font = NSFont(name: fontName, size: fontSize) ?? .systemFont(ofSize: fontSize)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.labelColor
+        ]
+        let attributed = NSAttributedString(string: text, attributes: attributes)
+        textView.textStorage?.setAttributedString(attributed)
+        
+        // Always apply new font, margins and Light/Dark mode
+        textView.typingAttributes = [
+            .font: font,
+            .foregroundColor: NSColor.labelColor
+        ]
+        textView.font = font // Ensure UI reflects new font even without new text
 
+        if textView.textContainerInset != margins {
+            textView.textContainerInset = margins
+        }
+
+        // Only replace text if it changed (preserves cursor, user edits)
+        if textView.string != text {
+            let attributed = NSAttributedString(string: text, attributes: [.font: font])
+            textView.textStorage?.setAttributedString(attributed)
         }
     }
     

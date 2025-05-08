@@ -13,7 +13,7 @@ struct ContentView: View {
     
     var body: some View {
         ZStack{
-            Color.white //set the background white
+            Color(NSColor.windowBackgroundColor).ignoresSafeArea() //background color, span whole window
             VStack {
                 Text("9").font(.system(size: 6)).hidden()
                 ToolbarView(

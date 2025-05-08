@@ -21,7 +21,7 @@ struct ToolbarView: View {
     var body: some View {
         HStack {
             Button(action: saveToNotes) {
-                Image(systemName: "heart.text.clipboard")
+                Image(systemName: "note.text")
             }
             
             Button(action: decreaseFontSize) {
@@ -53,5 +53,7 @@ struct ToolbarView: View {
             }
                 
         }
+        .background(Color(NSColor.windowBackgroundColor))
+        .foregroundColor(.primary)
     }
 }
