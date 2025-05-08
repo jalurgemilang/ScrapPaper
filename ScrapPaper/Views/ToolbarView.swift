@@ -9,6 +9,7 @@
 import SwiftUI
 
 struct ToolbarView: View {
+    let saveToNotes: () -> Void
     let increaseFontSize: () -> Void
     let decreaseFontSize: () -> Void
     let clearText: () -> Void
@@ -19,6 +20,10 @@ struct ToolbarView: View {
     
     var body: some View {
         HStack {
+            Button(action: saveToNotes) {
+                Image(systemName: "heart.text.clipboard")
+            }
+            
             Button(action: decreaseFontSize) {
                 Image(systemName: "textformat.size.smaller")
             }
@@ -41,13 +46,11 @@ struct ToolbarView: View {
             }
             
             Spacer()
-
-            
-                
-                Button(action: shareText) {
-                    Image(systemName: "square.and.arrow.up")
-                        .help("Share")
-                }
+    
+            Button(action: shareText) {
+                Image(systemName: "square.and.arrow.up")
+                    .help("Share")
+            }
                 
         }
     }

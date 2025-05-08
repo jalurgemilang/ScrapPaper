@@ -85,7 +85,7 @@ extension SharingServiceDelegate: NSSharingServiceDelegate {
     }
     
     func sharingService(_ sharingService: NSSharingService, didFailToShareItems items: [Any], error: Error) {
-        print("Sharing failed with error: \(error.localizedDescription)")
+        print("^ Sharing failed with error: \(error.localizedDescription)")
         // We could still choose to clear even on failure, depending on requirements
         // clearTextAction.perform()
     }

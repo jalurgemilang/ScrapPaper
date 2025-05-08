@@ -5,8 +5,11 @@ import AppKit
 struct ContentView: View {
     @State private var text = ""
     @State private var textStorage = NSTextStorage()
+    
     @AppStorage("fontSize") private var fontSize: Double = 14.0
     @AppStorage("selectedFontName") var selectedFontName: String = NSFont.systemFont(ofSize: 14).fontName
+    
+    @State private var showSaveSuccess = false
     
     var body: some View {
         ZStack{
@@ -14,23 +17,56 @@ struct ContentView: View {
             VStack {
                 Text("9").font(.system(size: 6)).hidden()
                 ToolbarView(
+                    saveToNotes     : saveToNotes,
                     increaseFontSize: increaseFontSize,
                     decreaseFontSize: decreaseFontSize,
-                    clearText: clearText,
-                    shareText: shareText
+                    clearText       : clearText,
+                    shareText       : shareText
                 )
-                .padding(.horizontal)                
+                .padding(.horizontal)
                 TextView(text: $text,
                          fontName: selectedFontName,
                          textStorage: textStorage,
                          onEvaluateExpression: useSoulverCore,
                          fontSize: CGFloat(fontSize),
                          margins: NSSize(width: 14, height: 14))
-                    .frame(minWidth: 300, minHeight: 300)
+                .frame(minWidth: 300, minHeight: 300)
                 Text("9").font(.system(size: 6)).hidden()
             } //VStack
+            
+            // Success notification
+            if showSaveSuccess {
+                VStack {
+                    Text("Saved to Notes!")
+                        .padding()
+                        .background(Color.green.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .transition(.opacity)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation {
+                            showSaveSuccess = false
+                        }
+                    }
+                }
+            }
         }
+    }
+    
+    private func saveToNotes() {
+        guard !text.isEmpty else { return }
         
+        ShortcutManager.shared.runShortcut(name: "ScrapPaperToNotes", text: text) { success in
+            if success {
+                DispatchQueue.main.async {
+                    withAnimation {
+                        showSaveSuccess = true
+                    }
+                }
+            }
+        }
     }
     
     private func increaseFontSize() {

@@ -14,9 +14,22 @@
 		9D7412B52DC9BBE900BB0227 /* ScrapPaper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScrapPaper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9DBB81C42DCB92C500635C0D /* Exceptions for "ScrapPaper" folder in "ScrapPaper" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9D7412B42DC9BBE900BB0227 /* ScrapPaper */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9D7412B72DC9BBE900BB0227 /* ScrapPaper */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9DBB81C42DCB92C500635C0D /* Exceptions for "ScrapPaper" folder in "ScrapPaper" target */,
+			);
 			path = ScrapPaper;
 			sourceTree = "<group>";
 		};
@@ -267,9 +280,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScrapPaper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Scrap Paper";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app needs permission to save your scrap notes into Apple Notes using Shortcuts";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -298,9 +313,11 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScrapPaper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Scrap Paper";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app needs permission to save your scrap notes into Apple Notes using Shortcuts";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
