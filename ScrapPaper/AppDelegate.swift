@@ -9,7 +9,7 @@
 import Cocoa
 import SwiftUI
 
-class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarDelegate {
 //    •    Create the initial app window
 //    •    Set up menus, preferences, or status items
 //    •    Handle app reopen events (e.g., clicking the dock icon)
@@ -40,13 +40,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
         statusItem?.menu = menu
         
+        
+        
     }
     
-    // Menu bar icon
-    @objc func toggleFromMenu() {
-        toggleWindow()
-    }
     
+    // MARK: - WINDOW
     func toggleWindow() {
         if let window = window, window.isVisible {
             window.orderOut(nil) // Hide window
@@ -60,9 +59,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             let contentView = ContentView()
             let win = NSWindow(
                 contentRect: NSMakeRect(0, 0, 400, 300),
-                styleMask: [.titled, .closable, .resizable],
+                styleMask: [.titled, .closable, .resizable, .miniaturizable],
                 backing: .buffered,
                 defer: false)
+            
+            // Add toolbar (I didn't put in applicationDidFinishLaunching because in there windows is still nil
+            // windows is only initialize here in showWindow
+            let toolbar = NSToolbar(identifier: NSToolbar.Identifier("MainToolbar"))
+            toolbar.delegate = self
+            toolbar.allowsUserCustomization = true
+            toolbar.autosavesConfiguration = true
+            
+            win.toolbar = toolbar
+            win.titleVisibility = .visible
+            //win.toolbarStyle = .unified
+            win.toolbarStyle = .expanded //classic macOS, left aligned toolbar
+            
             win.setFrameAutosaveName("Hotkey Window")               //saves name
             win.setFrameUsingName("Hotkey Window", force: true)     //restore position+size manually
             win.contentView = NSHostingView(rootView: contentView)
@@ -78,6 +90,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         sender.orderOut(nil) // Hide the window
         return false          // Prevent closing
+    }
+    
+    // MARK: - Menu Bar
+    @objc func toggleFromMenu() {
+        toggleWindow()
     }
     
     @objc func quitApp() {
@@ -96,5 +113,97 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             return
         }
         NSApp.terminate(nil)
+    }
+    
+    // MARK: - NSToolbarDelegate
+
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        return [
+            .saveToNotes, .decreaseFontSize, .increaseFontSize,
+            .fontPicker, .clearText, .shareText,
+            .flexibleSpace
+        ]
+    }
+
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        return [
+            .saveToNotes, .decreaseFontSize, .increaseFontSize,
+            .fontPicker, .clearText,
+            .shareText,
+            .flexibleSpace
+        ]
+    }
+
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+
+        switch itemIdentifier {
+        case .saveToNotes:
+            item.label = "Save"
+            item.image = NSImage(systemSymbolName: "note.text", accessibilityDescription: nil)
+            item.action = #selector(saveToNotes)
+            
+        case .increaseFontSize:
+            item.label = "Larger"
+            item.image = NSImage(systemSymbolName: "textformat.size.larger", accessibilityDescription: nil)
+            item.action = #selector(increaseFontSize)
+
+        case .decreaseFontSize:
+            item.label = "Smaller"
+            item.image = NSImage(systemSymbolName: "textformat.size.smaller", accessibilityDescription: nil)
+            item.action = #selector(decreaseFontSize)
+
+        case .clearText:
+            item.label = "Clear"
+            item.image = NSImage(systemSymbolName: "eraser.line.dashed", accessibilityDescription: nil)
+            item.action = #selector(clearText)
+
+        case .shareText:
+            item.label = "Share"
+            item.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
+            item.action = #selector(shareText)
+
+        case .fontPicker:
+            let fontPopup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 160, height: 24), pullsDown: false)
+            let fonts = NSFontManager.shared.availableFontFamilies.sorted()
+            fontPopup.addItems(withTitles: fonts)
+            fontPopup.target = self
+            fontPopup.action = #selector(fontChanged(_:))
+            item.view = fontPopup
+            item.label = "Font"
+            
+        default:
+            return nil
+        }
+
+        item.target = self
+        return item
+    }
+
+    //Call these buttons in AppDelegate
+    @objc func saveToNotes() {
+        ActionDispatcher.shared.saveToNotes?()
+    }
+
+    @objc func increaseFontSize() {
+        ActionDispatcher.shared.increaseFontSize?()
+    }
+
+    @objc func decreaseFontSize() {
+        ActionDispatcher.shared.decreaseFontSize?()
+    }
+
+    @objc func clearText() {
+        ActionDispatcher.shared.clearText?()
+    }
+
+    @objc func shareText() {
+        ActionDispatcher.shared.shareText?()
+    }
+
+    @objc func fontChanged(_ sender: NSPopUpButton) {
+        let selected = sender.titleOfSelectedItem ?? NSFont.systemFont(ofSize: 14).fontName
+        UserDefaults.standard.set(selected, forKey: "selectedFontName")
     }
 }

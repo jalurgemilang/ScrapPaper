@@ -16,13 +16,6 @@ struct ContentView: View {
             Color(NSColor.windowBackgroundColor).ignoresSafeArea() //background color, span whole window
             VStack {
                 Text("9").font(.system(size: 6)).hidden()
-                ToolbarView(
-                    saveToNotes     : saveToNotes,
-                    increaseFontSize: increaseFontSize,
-                    decreaseFontSize: decreaseFontSize,
-                    clearText       : clearText,
-                    shareText       : shareText
-                )
                 .padding(.horizontal)
                 TextView(text: $text,
                          fontName: selectedFontName,
@@ -33,7 +26,13 @@ struct ContentView: View {
                 .frame(minWidth: 300, minHeight: 300)
                 Text("9").font(.system(size: 6)).hidden()
             } //VStack
-            
+            .onAppear {
+                ActionDispatcher.shared.saveToNotes      = saveToNotes
+                ActionDispatcher.shared.increaseFontSize = increaseFontSize
+                ActionDispatcher.shared.decreaseFontSize = decreaseFontSize
+                ActionDispatcher.shared.clearText        = clearText
+                ActionDispatcher.shared.shareText        = shareText
+            }
             // Success notification
             if showSaveSuccess {
                 VStack {
@@ -102,6 +101,16 @@ struct ContentView: View {
             self.text = newText
         }
     }
+}
+
+// Custom NSToolbar identifier
+extension NSToolbarItem.Identifier {
+    static let saveToNotes      = NSToolbarItem.Identifier("saveToNotes")
+    static let increaseFontSize = NSToolbarItem.Identifier("increaseFontSize")
+    static let decreaseFontSize = NSToolbarItem.Identifier("decreaseFontSize")
+    static let clearText        = NSToolbarItem.Identifier("clearText")
+    static let shareText        = NSToolbarItem.Identifier("shareText")
+    static let fontPicker       = NSToolbarItem.Identifier("fontPicker")
 }
 
 struct ContentView_Previews : PreviewProvider {
