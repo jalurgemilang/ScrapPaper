@@ -3,8 +3,8 @@ import SoulverCore
 import AppKit
 
 struct ContentView: View {
-    @AppStorage("scrapText") private var text: String = ""
     @State private var textStorage = NSTextStorage()
+    @AppStorage("scrapText") private var text: String = ""
     
     @AppStorage("fontSize") private var fontSize: Double = 14.0
     @AppStorage("selectedFontName") var selectedFontName: String = NSFont.systemFont(ofSize: 14).fontName
@@ -12,42 +12,37 @@ struct ContentView: View {
     @State private var showSaveSuccess = false
     
     var body: some View {
-        ZStack{
-            Color(NSColor.windowBackgroundColor).ignoresSafeArea() //background color, span whole window
+        VStack {
+            TextView(text: $text,
+                     fontName: selectedFontName,
+                     textStorage: textStorage,
+                     onEvaluateExpression: { useSoulverCore(moveCursorToEnd: true) },
+                     fontSize: CGFloat(fontSize),
+                     margins: NSSize(width: 14, height: 14))
+            .frame(minWidth: 300, minHeight: 300)
+        } //VStack
+        .onAppear {
+            ActionDispatcher.shared.saveToNotes      = saveToNotes
+            ActionDispatcher.shared.increaseFontSize = increaseFontSize
+            ActionDispatcher.shared.decreaseFontSize = decreaseFontSize
+            ActionDispatcher.shared.clearText        = clearText
+            ActionDispatcher.shared.shareText        = shareText
+            useSoulverCore(moveCursorToEnd: false)
+        }
+        // Success notification
+        if showSaveSuccess {
             VStack {
-                Text("9").font(.system(size: 6)).hidden()
-                .padding(.horizontal)
-                TextView(text: $text,
-                         fontName: selectedFontName,
-                         textStorage: textStorage,
-                         onEvaluateExpression: useSoulverCore,
-                         fontSize: CGFloat(fontSize),
-                         margins: NSSize(width: 14, height: 14))
-                .frame(minWidth: 300, minHeight: 300)
-                Text("9").font(.system(size: 6)).hidden()
-            } //VStack
-            .onAppear {
-                ActionDispatcher.shared.saveToNotes      = saveToNotes
-                ActionDispatcher.shared.increaseFontSize = increaseFontSize
-                ActionDispatcher.shared.decreaseFontSize = decreaseFontSize
-                ActionDispatcher.shared.clearText        = clearText
-                ActionDispatcher.shared.shareText        = shareText
+                Text("Saved to Notes!")
+                    .padding()
+                    .background(Color.green.opacity(0.8))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
             }
-            // Success notification
-            if showSaveSuccess {
-                VStack {
-                    Text("Saved to Notes!")
-                        .padding()
-                        .background(Color.green.opacity(0.8))
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .transition(.opacity)
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        withAnimation {
-                            showSaveSuccess = false
-                        }
+            .transition(.opacity)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation {
+                        showSaveSuccess = false
                     }
                 }
             }
@@ -92,11 +87,13 @@ struct ContentView: View {
         textStorage.endEditing()
     }
     
-    private func useSoulverCore() {
+    private func useSoulverCore(moveCursorToEnd: Bool) {
         ExpressionEvaluator.evaluate(
             text: text,
             textStorage: textStorage,
-            fontSize: fontSize
+            fontName: selectedFontName,
+            fontSize: fontSize,
+            moveCursorToEnd: moveCursorToEnd
         ) { newText in
             self.text = newText
         }

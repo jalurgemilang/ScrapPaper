@@ -4,7 +4,8 @@
 //
 //  Created by Long Fong Yee on 08/05/2025.
 //
-
+//  Run a shortcut with a specified name and text input
+//
 
 import Foundation
 import AppKit

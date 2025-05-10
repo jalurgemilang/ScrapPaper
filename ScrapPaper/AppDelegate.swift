@@ -75,6 +75,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarD
             //win.toolbarStyle = .unified
             win.toolbarStyle = .expanded //classic macOS, left aligned toolbar
             
+            //Hotkey Control+Space
             win.setFrameAutosaveName("Hotkey Window")               //saves name
             win.setFrameUsingName("Hotkey Window", force: true)     //restore position+size manually
             win.contentView = NSHostingView(rootView: contentView)
@@ -101,7 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarD
         let text = UserDefaults.standard.string(forKey: "scrapText") ?? ""
         if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let alert = NSAlert()
-            alert.messageText = "You still have text."
+            alert.messageText = "You have typed some words..."
             alert.informativeText = "Are you sure you want to quit?"
             alert.alertStyle = .warning
             alert.addButton(withTitle: "Quit")
@@ -126,10 +127,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarD
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        // Default order of the toolbar buttons (left to right)
         return [
-            .saveToNotes, .decreaseFontSize, .increaseFontSize,
-            .fontPicker, .clearText,
-            .shareText,
+            .saveToNotes, .clearText, .shareText,
+            .decreaseFontSize, .increaseFontSize, .fontPicker,
             .flexibleSpace
         ]
     }
@@ -141,7 +142,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarD
         switch itemIdentifier {
         case .saveToNotes:
             item.label = "Save"
-            item.image = NSImage(systemSymbolName: "note.text", accessibilityDescription: nil)
+            item.image = NSImage(systemSymbolName: "paperplane", accessibilityDescription: nil)
             item.action = #selector(saveToNotes)
             
         case .increaseFontSize:
@@ -167,12 +168,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarD
         case .fontPicker:
             let fontPopup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 160, height: 24), pullsDown: false)
             let fonts = NSFontManager.shared.availableFontFamilies.sorted()
-            fontPopup.addItems(withTitles: fonts)
+            
+            for fontName in fonts {
+                let menuItem = NSMenuItem(title: fontName, action: nil, keyEquivalent: "")
+                menuItem.representedObject = fontName
+                fontPopup.menu?.addItem(menuItem)
+            }
+                
             fontPopup.target = self
             fontPopup.action = #selector(fontChanged(_:))
             item.view = fontPopup
             item.label = "Font"
             
+            let savedFont = UserDefaults.standard.string(forKey: "selectedFontName")
+            if let match = fontPopup.itemArray.first(where: { ($0.representedObject as? String) == savedFont }) {
+                fontPopup.select(match)
+            }
+                
         default:
             return nil
         }
@@ -203,7 +215,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarD
     }
 
     @objc func fontChanged(_ sender: NSPopUpButton) {
-        let selected = sender.titleOfSelectedItem ?? NSFont.systemFont(ofSize: 14).fontName
-        UserDefaults.standard.set(selected, forKey: "selectedFontName")
+        if let fontName = sender.selectedItem?.representedObject as? String {
+            UserDefaults.standard.set(fontName, forKey: "selectedFontName")
+        }
     }
 }

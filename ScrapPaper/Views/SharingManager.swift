@@ -1,6 +1,10 @@
 import AppKit
 import UniformTypeIdentifiers
 
+//
+//  This is to create a Share Sheet to share text to another app
+//
+
 class SharingManager {
     static let shared = SharingManager()
     // Add a property to store the attributed string being shared

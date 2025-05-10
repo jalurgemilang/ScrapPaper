@@ -4,7 +4,8 @@
 //
 //  Created by Long Fong Yee on 06/05/2025.
 //
-
+//  This is for the Control-Space hot key to show and hide window
+//
 
 import Cocoa
 import Carbon

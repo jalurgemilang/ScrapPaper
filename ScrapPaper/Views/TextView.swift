@@ -23,47 +23,43 @@ struct TextView: NSViewRepresentable {
         // Create NSTextView inside NSScrollView with our text system
         let textView = NSTextView(frame: .zero, textContainer: textContainer)
         //textView.translatesAutoresizingMaskIntoConstraints = false //remove this to mouse click, drag & highlight
-        textView.isEditable = true
-        textView.isSelectable = true
-        textView.isRichText = true
-        textView.allowsUndo = true
-        textView.font = NSFont(name: fontName, size: fontSize) ?? .systemFont(ofSize: fontSize)
-        textView.backgroundColor = .textBackgroundColor
-        textView.drawsBackground = false            //set false if using image as background
-        textView.isVerticallyResizable = true       //true  = this enable wordwrap?
-        textView.isHorizontallyResizable = false    //false = this enable wordwrap; also needed for mouse click, drag & highlight
-        textView.autoresizingMask = [.width]        //needed for mouse click, drag & highlight
-        
+        textView.isEditable                 = true
+        textView.isSelectable               = true
+        textView.isRichText                 = false
+        textView.allowsUndo                 = true
+        textView.font                       = NSFont(name: fontName, size: fontSize) ?? .systemFont(ofSize: fontSize)
+        textView.textColor                  = .labelColor
+        textView.backgroundColor            = .textBackgroundColor
+        textView.drawsBackground            = false     //set false if using image as background
+        textView.isVerticallyResizable      = true      //true  = this enable wordwrap?
+        textView.isHorizontallyResizable    = false     //false = this enable wordwrap; also needed for mouse click, drag & highlight
+        textView.autoresizingMask           = [.width]  //needed for mouse click, drag & highlight
+        textView.importsGraphics            = false     //prevents NSTextView from expecting drag and drop images in rich text mode
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude) //allows scrolling beyond bottom window
         textView.delegate = context.coordinator
         
         // Apply text margins
         textView.textContainerInset = margins
+                
+        textView.becomeFirstResponder()
         
-        // Monitor key events
-        let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 36 && event.modifierFlags.contains(.shift) { // Enter with Shift (==)
-                context.coordinator.processEqualsPressed()
-                return nil
-            }
-            return event
-        }
-        context.coordinator.eventMonitor = monitor
-        
-        // Wrap in scroll view
-        let scrollView = NSScrollView()
-        scrollView.backgroundColor = .windowBackgroundColor
-        scrollView.drawsBackground = true          //set false if using image as background
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.autohidesScrollers = true
-        scrollView.borderType = .noBorder
-        scrollView.autoresizingMask = [.width, .height]
+        // Embed in scroll view
+        let scrollView                      = NSScrollView()
+        scrollView.backgroundColor          = NSColor(named: "CustomWindowBackground")!
+        scrollView.drawsBackground          = true      //set false if using image as background
+        scrollView.hasVerticalScroller      = true
+        scrollView.hasHorizontalScroller    = false
+        scrollView.autohidesScrollers       = true
+        scrollView.borderType               = .noBorder
+        scrollView.autoresizingMask         = [.width, .height]
         scrollView.contentView.postsBoundsChangedNotifications = true
         
         // Configures how NSTextView handles word wrap and resizing
         if let container = textView.textContainer {
             container.widthTracksTextView = true
             container.lineBreakMode = .byWordWrapping
+            container.containerSize = NSSize(width: scrollView.contentSize.width,
+                                             height: CGFloat.greatestFiniteMagnitude) //allows scrolling beyond bottom window
         }
         
         context.coordinator.textView = textView
@@ -73,39 +69,7 @@ struct TextView: NSViewRepresentable {
             textView.window?.makeFirstResponder(textView)
         }
         
-        //        // Set up the background image
-        //        let imageView = NSImageView()
-        //        imageView.imageScaling = .scaleAxesIndependently
-        //        imageView.translatesAutoresizingMaskIntoConstraints = false
-        //
-        //        // Assign initial image based on system appearance
-        //        let appearance = NSApp.effectiveAppearance
-        //        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-        //            imageView.image = NSImage(named: "black_napkin")
-        //        } else {
-        //            imageView.image = NSImage(named: "white_napkin")
-        //        }
-        //
-        //        // Use a container view to hold background + text
-        //        let containerView = NSView()
-        //        containerView.translatesAutoresizingMaskIntoConstraints = false
-        //        containerView.addSubview(imageView)
-        //        containerView.addSubview(textView)
-        //
-        //        // Constraints to fill the view
-        //        NSLayoutConstraint.activate([
-        //            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-        //            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        //            imageView.topAnchor.constraint(equalTo: containerView.topAnchor),
-        //            imageView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-        //
-        //            textView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-        //            textView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        //            textView.topAnchor.constraint(equalTo: containerView.topAnchor),
-        //            textView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-        //        ])
-        //
-        //        scrollView.documentView = containerView
+
         
         // FINALE:
         scrollView.documentView = textView
@@ -127,12 +91,7 @@ struct TextView: NSViewRepresentable {
             .font: font,
             .foregroundColor: NSColor.labelColor
         ]
-        //overwrites the entire textStorage with new NSAttributedString
-        //that's why didn't preserve color when increase/decrease font size
-        //let attributed = NSAttributedString(string: text, attributes: attributes)
-        //textView.textStorage?.setAttributedString(attributed)
-        
-        
+       
         // Update typing attributes (used for new text the user types)
         textView.typingAttributes[.font] = font
         textView.typingAttributes[.foregroundColor] = NSColor.labelColor
@@ -148,8 +107,7 @@ struct TextView: NSViewRepresentable {
                     updated[.font] = font
                     storage.setAttributes(updated, range: range)
                 }
-            }
-            
+            }            
             storage.endEditing()
         }
         
@@ -165,22 +123,11 @@ struct TextView: NSViewRepresentable {
             context.coordinator.isUpdatingFromTextView = false
         }
         
-        // Always apply new font, margins and Light/Dark mode
-//        textView.typingAttributes = [
-//            .font: font,
-//            .foregroundColor: NSColor.labelColor
-//        ]
-//        textView.font = font // Ensure UI reflects new font even without new text
-
         if textView.textContainerInset != margins {
             textView.textContainerInset = margins
         }
-
+        
         // Only replace text if it changed (preserves cursor, user edits)
-//        if textView.string != text {
-//            let attributed = NSAttributedString(string: text, attributes: [.font: font])
-//            textView.textStorage?.setAttributedString(attributed)
-//        }
         if textView.string != text {
             context.coordinator.isUpdatingFromTextView = true
             textView.string = text
@@ -221,6 +168,9 @@ struct TextView: NSViewRepresentable {
             DispatchQueue.main.async {
                 self.isUpdatingFromTextView = false
             }
+            
+            // ✅ Scroll to caret if needed
+            textView.scrollRangeToVisible(textView.selectedRange())
             
             // Check if the user just typed "=="
             if let selectedRange = textView.selectedRanges.first as? NSRange,
