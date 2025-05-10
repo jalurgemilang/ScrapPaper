@@ -40,7 +40,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSToolbarD
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
         statusItem?.menu = menu
         
+        // Create Edit menu with your shortcuts
+        let editMenuItem = NSMenuItem()
+        editMenuItem.title = "Editor"           //visible to user
+        menu.addItem(editMenuItem)
         
+        let editMenu = NSMenu(title: "Editor")  //internal, can replace with NSMenu() also
+        editMenuItem.submenu = editMenu
+        
+        editMenu.addItem(NSMenuItem(title: "Save to Notes", action: #selector(saveToNotes), keyEquivalent: "s"))
+        editMenu.addItem(NSMenuItem(title: "Clear Text", action: #selector(clearText), keyEquivalent: "d"))
+        editMenu.addItem(NSMenuItem(title: "Decrease Font Size", action: #selector(decreaseFontSize), keyEquivalent: "-"))
+        editMenu.addItem(NSMenuItem(title: "Increase Font Size", action: #selector(increaseFontSize), keyEquivalent: "=")) // Shift + = is +
+        
+        NSApp.mainMenu = menu
         
     }
     
